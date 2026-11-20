@@ -113,6 +113,16 @@ header h1{margin:0;white-space:nowrap;font-size:clamp(13px,4.2vw,20px);font-weig
 .row.low .hr{color:var(--yellow)}
 
 .modal{position:fixed;inset:0;background:rgba(1,10,34,.78);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:20;padding:14px}
+.cf{text-align:center;padding:22px 18px 16px}
+.cf .ic{width:56px;height:56px;margin:0 auto 10px;border-radius:50%;background:#c8102e;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 #6e0a1b,0 8px 16px rgba(0,0,0,.4)}
+.cf .ic svg{width:28px;height:28px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.cf h3{margin:0 0 6px;font-size:20px;font-weight:900;color:#fff}
+.cf p{margin:0 0 18px;font-size:15px;font-weight:700;color:#cfe0ff}
+.cf .btns{display:flex;gap:10px}
+.cf .b3d{flex:1;height:50px;font-size:16px;border-radius:14px}
+.cf .b3d.r{background:linear-gradient(180deg,#ff6b81 0%,#c8102e 55%,#8a0a1f 100%);box-shadow:0 5px 0 #5a0715,0 9px 12px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.5)}
+#cfModal{animation:cfIn .15s ease-out}
+@keyframes cfIn{from{opacity:0}to{opacity:1}}
 .sheet{width:min(100%,380px);padding:14px 14px 8px;border-radius:24px;background:linear-gradient(180deg,#0f4cbc,#052a78);border:2px solid rgba(255,255,255,.18);box-shadow:0 20px 50px rgba(0,0,0,.6)}
 .dhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .dhead h3{margin:0;font-size:24px;font-weight:900;color:var(--yellow);text-shadow:0 2px 0 #021a4a}
@@ -196,6 +206,14 @@ header h1{margin:0;white-space:nowrap;font-size:clamp(13px,4.2vw,20px);font-weig
   <div class="dfoot" id="dFoot"></div>
  </div>
 </div>
+<div class="modal" id="cfModal" hidden>
+ <div class="sheet cf" role="alertdialog" aria-modal="true">
+  <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></div>
+  <h3 id="cfTitle">Silinsin mi?</h3>
+  <p id="cfText">Bu kayıt kalıcı olarak silinecek.</p>
+  <div class="btns"><button class="b3d" id="cfNo"><span>Vazgeç</span></button><button class="b3d r" id="cfYes"><span>Sil</span></button></div>
+ </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -252,6 +270,15 @@ const sum=l=>l.reduce((s,r)=>s+Number(r.hours),0);
 const todayISO=()=>iso(new Date());
 function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y0)/864e5+1)/7)}
 const DAY_LONG=['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+function askConfirm(title,text,yes){
+ return new Promise(res=>{
+  $('cfTitle').textContent=title;$('cfText').textContent=text;$('cfYes').firstElementChild.textContent=yes||'Sil';
+  const m=$('cfModal');m.hidden=false;
+  const done=v=>{m.hidden=true;$('cfYes').onclick=$('cfNo').onclick=m.onclick=null;res(v)};
+  $('cfYes').onclick=()=>done(true);$('cfNo').onclick=()=>done(false);
+  m.onclick=e=>{if(e.target===m)done(false)};
+ });
+}
 function toast(msg,err){const t=$('toast');t.textContent=msg;t.classList.toggle('err',!!err);t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2200)}
 
 /* ============ Durum ============ */
@@ -343,7 +370,7 @@ $('entries').addEventListener('click',async e=>{
   renderOp();return;
  }
  const b=e.target.closest('[data-del]');if(!b)return;
- if(!confirm('Silinsin mi?'))return;
+ if(!await askConfirm('Silinsin mi?','Bu kayıt kalıcı olarak silinecek.','Sil'))return;
  try{await store.remove(b.dataset.del);await refresh();toast('Silindi');editingId=null;picked=null;renderOp()}catch(err){toast('Silinemedi',true)}
 });
 
