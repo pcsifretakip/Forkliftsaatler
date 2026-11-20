@@ -34,10 +34,6 @@ header h1{margin:0;white-space:nowrap;font-size:clamp(13px,4.2vw,20px);font-weig
  text-shadow:0 2px 2px rgba(0,0,0,.35);transition:transform .08s,box-shadow .08s}
 .b3d::before{content:"";position:absolute;left:0;right:0;top:0;height:48%;pointer-events:none;
  background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.08));border-radius:16px 16px 50% 50%/16px 16px 12px 12px}
-.b3d::after{content:"";position:absolute;top:0;left:-70%;width:40%;height:100%;pointer-events:none;transform:skewX(-22deg);
- background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:shine 5s ease-in-out infinite}
-.b3d:nth-child(2)::after{animation-delay:.5s}.b3d:nth-child(3)::after{animation-delay:1s}.b3d:nth-child(4)::after{animation-delay:1.5s}.b3d:nth-child(5)::after{animation-delay:2s}
-@keyframes shine{0%,60%{left:-70%}100%{left:130%}}
 .b3d>*{position:relative;z-index:1}
 .b3d:active:not(:disabled){transform:translateY(5px);box-shadow:0 1px 0 #021a4a,0 3px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.4)}
 .b3d.y{color:var(--ink);text-shadow:0 1px 0 rgba(255,255,255,.5);
@@ -68,6 +64,8 @@ header h1{margin:0;white-space:nowrap;font-size:clamp(13px,4.2vw,20px);font-weig
 /* ===== Operatör ===== */
 .topbar{display:flex;align-items:center;gap:10px;height:46px;flex:0 0 46px;margin-bottom:8px}
 .topbar h2{margin:0;font-size:clamp(20px,6vw,26px);font-weight:900;flex:1;color:var(--yellow);text-shadow:0 2px 0 #021a4a}
+.calcard{flex:0 0 auto;padding:12px 10px 14px;margin:0 2px 16px;border-radius:22px;background:linear-gradient(180deg,#0b3a96,#072468);border:1px solid rgba(255,255,255,.18);box-shadow:0 6px 0 #021a4a,0 12px 18px rgba(0,0,0,.5)}
+.calcard .weekbar{margin-bottom:12px}
 .weekbar{display:flex;align-items:center;gap:10px;flex:0 0 46px;margin-bottom:10px}
 .weekbar .b3d{width:46px;height:40px;font-size:20px;border-radius:13px}
 .weekbar .lbl{flex:1;text-align:center;font-weight:800;font-size:14px;line-height:1.2}
@@ -80,9 +78,16 @@ header h1{margin:0;white-space:nowrap;font-size:clamp(13px,4.2vw,20px);font-weig
 .mid{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;margin:6px 0}
 .hours{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr;gap:12px;flex:1;min-height:0;max-height:260px;padding-bottom:7px}
 .hours .b3d{font-size:clamp(24px,8vw,38px);border-radius:18px}
-.ask{text-align:center;font-weight:800;font-size:clamp(14px,4vw,17px);color:var(--yellow);text-shadow:0 2px 0 #021a4a;margin-bottom:12px;flex:0 0 auto}
+.ask{position:relative;text-align:center;font-weight:900;font-size:clamp(17px,5.2vw,23px);letter-spacing:.4px;line-height:1.2;text-wrap:balance;color:#fff;
+ padding:16px 12px;margin:2px 2px 16px;flex:0 0 auto;border-radius:18px;
+ background:linear-gradient(180deg,#3a78ea 0%,#0a49b8 55%,#062f80 100%);
+ border:1px solid rgba(255,255,255,.25);
+ text-shadow:0 2px 2px rgba(0,0,0,.45);
+ box-shadow:0 6px 0 #021a4a,0 12px 18px rgba(0,0,0,.5),inset 0 2px 0 rgba(255,255,255,.55);overflow:hidden}
+.ask::before{content:"";position:absolute;left:0;right:0;top:0;height:48%;background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,.04));border-radius:18px 18px 40% 40%/18px 18px 14px 14px}
+.ask span{position:relative;color:var(--yellow)}
 .state{text-align:center;font-size:clamp(18px,5.4vw,24px);font-weight:900;color:var(--yellow);text-shadow:0 2px 0 #021a4a}
-.entries{flex:0 0 40px;display:flex;gap:8px;overflow-x:auto;align-items:center;margin-bottom:8px;scrollbar-width:none}
+.entries{display:none!important;flex:0 0 40px;display:flex;gap:8px;overflow-x:auto;align-items:center;margin-bottom:8px;scrollbar-width:none}
 .entries::-webkit-scrollbar{display:none}
 .entry{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:5px 6px 5px 12px;border-radius:30px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);font-weight:800;font-size:14px}
 .entry.edit{background:var(--yellow);color:var(--ink);border-color:#fff}
@@ -120,7 +125,7 @@ header h1{margin:0;white-space:nowrap;font-size:clamp(13px,4.2vw,20px);font-weig
 .cf p{margin:0 0 18px;font-size:15px;font-weight:700;color:#cfe0ff}
 .cf .btns{display:flex;gap:10px}
 .cf .b3d{flex:1;height:50px;font-size:16px;border-radius:14px}
-.cf .b3d.r{background:linear-gradient(180deg,#ff6b81 0%,#c8102e 55%,#8a0a1f 100%);box-shadow:0 5px 0 #5a0715,0 9px 12px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.5)}
+.b3d.r,.cf .b3d.r{background:linear-gradient(180deg,#ff6b81 0%,#c8102e 55%,#8a0a1f 100%);box-shadow:0 5px 0 #5a0715,0 9px 12px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.5)}
 #cfModal{animation:cfIn .15s ease-out}
 @keyframes cfIn{from{opacity:0}to{opacity:1}}
 .sheet{width:min(100%,380px);padding:14px 14px 8px;border-radius:24px;background:linear-gradient(180deg,#0f4cbc,#052a78);border:2px solid rgba(255,255,255,.18);box-shadow:0 20px 50px rgba(0,0,0,.6)}
@@ -139,9 +144,11 @@ header h1{margin:0;white-space:nowrap;font-size:clamp(13px,4.2vw,20px);font-weig
 .drow.zero b{color:rgba(255,255,255,.45)}
 .dfoot{display:flex;justify-content:space-between;padding:12px 12px 8px;font-weight:700;font-size:14px;border-top:1px solid rgba(255,255,255,.2);margin-top:8px}
 .dfoot b{color:var(--yellow);font-size:17px;margin-left:4px}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,15px);opacity:0;pointer-events:none;background:#06307f;border:2px solid var(--yellow);color:#fff;padding:10px 16px;border-radius:14px;font-weight:800;font-size:14px;transition:.2s;max-width:calc(100% - 30px);text-align:center;z-index:30}
-.toast.err{border-color:#ff5b6e}
-.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast{position:fixed;left:50%;top:50%;z-index:40;transform:translate(-50%,-50%) scale(.8);opacity:0;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:150px;max-width:calc(100vw - 48px);padding:20px 26px;border-radius:22px;text-align:center;color:#fff;font-weight:900;font-size:18px;text-shadow:0 2px 2px rgba(0,0,0,.35);
+ background:linear-gradient(180deg,#2fcf68 0%,#15a047 100%);border:2px solid rgba(255,255,255,.35);box-shadow:0 7px 0 #0a5a26,0 18px 36px rgba(0,0,0,.55);transition:opacity .18s,transform .18s}
+.toast svg{width:38px;height:38px;fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
+.toast.err{background:linear-gradient(180deg,#ff6b81 0%,#c8102e 100%);box-shadow:0 7px 0 #6e0a1b,0 18px 36px rgba(0,0,0,.55)}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 @media(prefers-reduced-motion:reduce){.b3d::after{animation:none;display:none}.fill,.toast{transition:none}}
 @media(max-height:560px){.day{height:58px}.hours{max-height:170px;gap:8px}header,.topbar{height:40px;flex-basis:40px}}
 </style>
@@ -169,15 +176,16 @@ header h1{margin:0;white-space:nowrap;font-size:clamp(13px,4.2vw,20px);font-weig
 <!-- OPERATÖR -->
 <section class="view" id="vOp" hidden>
  <div class="topbar"><h2 id="opName"></h2></div>
+ <div class="calcard">
  <div class="weekbar">
   <button class="b3d" id="prevWeek" aria-label="Önceki hafta"><span>‹</span></button>
   <div class="lbl"><span id="weekTitle"></span><small id="weekRange"></small></div>
   <button class="b3d" id="nextWeek" aria-label="Sonraki hafta"><span>›</span></button>
  </div>
  <div class="days" id="days"></div>
+ </div>
  <div class="mid" id="mid"></div>
  <div class="entries" id="entries"></div>
- <button class="b3d y save" id="saveBtn" disabled><span>Kaydet</span></button>
 </section>
 
 <!-- SAATLER -->
@@ -254,7 +262,7 @@ const store=USE_FB?(()=>{
  };
 })():{
  async load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}},
- async add(rec){const all=await this.load();all.push(rec);localStorage.setItem(KEY,JSON.stringify(all))},
+ async add(rec){const all=(await this.load()).filter(x=>x.id!==rec.id);all.push(rec);localStorage.setItem(KEY,JSON.stringify(all))},
  async update(id,hours){const all=await this.load();const r=all.find(x=>x.id===id);if(r)r.hours=hours;localStorage.setItem(KEY,JSON.stringify(all))},
  async remove(id){const all=(await this.load()).filter(r=>r.id!==id);localStorage.setItem(KEY,JSON.stringify(all))}
 };
@@ -279,10 +287,21 @@ function askConfirm(title,text,yes){
   m.onclick=e=>{if(e.target===m)done(false)};
  });
 }
-function toast(msg,err){const t=$('toast');t.textContent=msg;t.classList.toggle('err',!!err);t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2200)}
+let AC=null;
+function tink(err){
+ try{
+  AC=AC||new(window.AudioContext||window.webkitAudioContext)();
+  if(AC.state==='suspended')AC.resume();
+  const t=AC.currentTime,tone=(f,v,d,type)=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.008);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.02)};
+  if(err){tone(220,.25,.25,'triangle')}
+  else{tone(1760,.3,.45);tone(2637,.14,.3);tone(3520,.06,.2)}
+ }catch(e){}
+}
+const CHECK='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',CROSS='<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function toast(msg,err){const t=$('toast');t.innerHTML=(err?CROSS:CHECK)+'<span></span>';t.lastChild.textContent=msg;t.classList.toggle('err',!!err);t.classList.add('show');tink(err);clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),1400)}
 
 /* ============ Durum ============ */
-let records=[],user=null,weekOffset=0,selDate=null,picked=null,editingId=null,tab='week';
+let records=[],user=null,weekOffset=0,selDate=null,picked=null,pickedKey=null,editingId=null,tab='week';
 async function refresh(){records=await store.load()}
 function show(v){
  ['vHome','vOp','vStats'].forEach(x=>$(x).hidden=x!==v);
@@ -317,11 +336,11 @@ function renderHome(){
 }
 $('names').addEventListener('click',async e=>{
  const b=e.target.closest('[data-name]');if(!b)return;
- user=b.dataset.name;weekOffset=0;picked=null;editingId=null;
+ user=b.dataset.name;weekOffset=0;picked=null;pickedKey=null;editingId=null;
  await refresh();selDate=defaultDay();renderOp();show('vOp');
 });
 $('goStats').addEventListener('click',async()=>{await refresh();tab='week';renderStats();show('vStats')});
-$('closeBtn').addEventListener('click',async()=>{user=null;await refresh();renderHome();show('vHome')});
+$('closeBtn').addEventListener('click',async()=>{user=null;pickedKey=null;await refresh();renderHome();show('vHome')});
 
 /* ============ Operatör ============ */
 function weekDates(){const m=addDays(mondayOf(new Date()),weekOffset*7);return[0,1,2,3,4,5].map(i=>iso(addDays(m,i)))}
@@ -341,37 +360,36 @@ function renderOp(){
   return `<button class="b3d day ${isT?'g':sel?'y':''} ${isT&&sel?'sel':''}" data-day="${d}" ${fut?'disabled':''}><span style="display:flex;flex-direction:column;align-items:center"><i>${DAY_SHORT[i]}</i><b>${parse(d).getDate()}</b><em>${tot?tot+' sa':''}</em>${isT?'<u>Senin günün</u>':''}</span></button>`;
  }).join('');
  const ok=selDate&&eligible(selDate);
+ const recs=ok?mine.filter(r=>r.date===selDate):[],existing=sum(recs);
+ const key=user+'|'+selDate;
+ if(pickedKey!==key){pickedKey=key;picked=existing||null}
  $('mid').innerHTML=ok
-  ?`<div class="ask">${editingId?'Saati değiştir':'Forklift kullandığınız saati seçiniz'}</div><div class="hours">${[1,2,3,4,5,6,7,8].map(h=>`<button class="b3d ${picked===h?'y':''}" data-h="${h}"><span>${h}</span></button>`).join('')}</div>`
+  ?`<div class="ask"><span>FORKLİFT KULLANDIĞINIZ SAATİ GİRİN</span></div><div class="hours">${[1,2,3,4,5,6,7,8].map(h=>`<button class="b3d ${picked===h?'y':''}" data-h="${h}"><span>${h}</span></button>`).join('')}</div>`
   :`<div class="state">Bir gün seç</div>`;
- const recs=ok?mine.filter(r=>r.date===selDate):[];
- $('entries').innerHTML=recs.map(r=>`<div class="entry ${editingId===r.id?'edit':''}"><button class="elabel" data-edit="${r.id}" aria-label="Düzenle">✎ ${r.hours} sa</button><button class="x" data-del="${r.id}" aria-label="Sil">✕</button></div>`).join('');
- $('saveBtn').disabled=!(ok&&picked);
- $('saveBtn').firstElementChild.textContent=picked?(editingId?`${picked} saat güncelle`:`${picked} saat ekle`):'Kaydet';
 }
-$('prevWeek').addEventListener('click',()=>{weekOffset--;selDate=defaultDay();picked=null;editingId=null;renderOp()});
-$('nextWeek').addEventListener('click',()=>{if(weekOffset<0){weekOffset++;selDate=defaultDay();picked=null;editingId=null;renderOp()}});
-$('days').addEventListener('click',e=>{const b=e.target.closest('[data-day]');if(!b||b.disabled)return;selDate=b.dataset.day;picked=null;editingId=null;renderOp()});
-$('mid').addEventListener('click',e=>{const b=e.target.closest('[data-h]');if(!b)return;picked=Number(b.dataset.h);renderOp()});
-$('saveBtn').addEventListener('click',async()=>{
- if(!picked||!selDate)return;
+$('prevWeek').addEventListener('click',()=>{weekOffset--;selDate=defaultDay();renderOp()});
+$('nextWeek').addEventListener('click',()=>{if(weekOffset<0){weekOffset++;selDate=defaultDay();renderOp()}});
+$('days').addEventListener('click',e=>{const b=e.target.closest('[data-day]');if(!b||b.disabled)return;selDate=b.dataset.day;renderOp()});
+$('mid').addEventListener('click',async e=>{
+ const b=e.target.closest('[data-h]');if(!b||!selDate)return;
+ const h=Number(b.dataset.h),date=selDate,who=user;
+ const removing=picked===h;
+ picked=removing?null:h;renderOp();
+ const recs=records.filter(r=>r.person===who&&r.date===date);
  try{
-  if(editingId){await store.update(editingId,picked);toast('Güncellendi')}
-  else{await store.add({id:Date.now()+Math.random().toString(36).slice(2,6),person:user,date:selDate,hours:picked});toast(`+${picked} saat`)}
-  await refresh();picked=null;editingId=null;renderOp();
- }catch(err){toast('Kaydedilemedi',true)}
-});
-$('entries').addEventListener('click',async e=>{
- const ed=e.target.closest('[data-edit]');
- if(ed){
-  const id=ed.dataset.edit;
-  if(editingId===id){editingId=null;picked=null}
-  else{editingId=id;picked=Number((records.find(r=>r.id===id)||{}).hours)||null}
-  renderOp();return;
- }
- const b=e.target.closest('[data-del]');if(!b)return;
- if(!await askConfirm('Silinsin mi?','Bu kayıt kalıcı olarak silinecek.','Sil'))return;
- try{await store.remove(b.dataset.del);await refresh();toast('Silindi');editingId=null;picked=null;renderOp()}catch(err){toast('Silinemedi',true)}
+  if(removing){
+   for(const x of recs)await store.remove(x.id);
+   toast('Kaldırıldı');
+  }else if(recs.length){
+   await store.update(recs[0].id,h);
+   for(const x of recs.slice(1))await store.remove(x.id);
+   toast(`${h} saat kaydedildi`);
+  }else{
+   await store.add({id:who+'_'+date,person:who,date:date,hours:h});
+   toast(`${h} saat kaydedildi`);
+  }
+  await refresh();renderOp();
+ }catch(err){pickedKey=null;toast('Kaydedilemedi',true);await refresh();renderOp()}
 });
 
 /* ============ Saatler ============ */
