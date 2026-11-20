@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#031a4a">
+<title>Forklift Takip</title>
+<style>
+:root{
+ --navy:#031a4a;--navy2:#0a3fa0;--blue:#0a49b8;
+ --yellow:#ffd100;--yellow2:#ffe56b;--ink:#0a2a6b;--text:#fff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:radial-gradient(120% 80% at 50% 0%,#0d46b0 0%,#042060 55%,#010d2a 100%);color:var(--text);font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer;padding:0}
+.app{height:100dvh;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto;position:relative}
+.app::before{content:"";position:fixed;left:0;right:0;top:0;height:5px;background:var(--yellow);box-shadow:0 2px 12px #ffd10080;z-index:5}
+header{display:flex;align-items:center;justify-content:center;position:relative;height:46px;flex:0 0 46px;margin-bottom:10px}
+header h1{margin:0;white-space:nowrap;font-size:clamp(13px,4.2vw,20px);font-weight:900;font-style:italic;letter-spacing:.5px;color:var(--yellow);text-shadow:0 2px 0 #021a4a}
+.view{flex:1;min-height:0;display:flex;flex-direction:column}
+
+/* ===== 3D ayna butonlar ===== */
+.b3d{position:relative;overflow:hidden;border:0;border-radius:16px;font-weight:900;color:#fff;
+ background:linear-gradient(180deg,#3a78ea 0%,#0a49b8 52%,#062f80 100%);
+ box-shadow:0 6px 0 #021a4a,0 11px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.55);
+ text-shadow:0 2px 2px rgba(0,0,0,.35);transition:transform .08s,box-shadow .08s}
+.b3d::before{content:"";position:absolute;left:0;right:0;top:0;height:48%;pointer-events:none;
+ background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.08));border-radius:16px 16px 50% 50%/16px 16px 12px 12px}
+.b3d::after{content:"";position:absolute;top:0;left:-70%;width:40%;height:100%;pointer-events:none;transform:skewX(-22deg);
+ background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:shine 5s ease-in-out infinite}
+.b3d:nth-child(2)::after{animation-delay:.5s}.b3d:nth-child(3)::after{animation-delay:1s}.b3d:nth-child(4)::after{animation-delay:1.5s}.b3d:nth-child(5)::after{animation-delay:2s}
+@keyframes shine{0%,60%{left:-70%}100%{left:130%}}
+.b3d>*{position:relative;z-index:1}
+.b3d:active:not(:disabled){transform:translateY(5px);box-shadow:0 1px 0 #021a4a,0 3px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.4)}
+.b3d.y{color:var(--ink);text-shadow:0 1px 0 rgba(255,255,255,.5);
+ background:linear-gradient(180deg,#fff08a 0%,#ffd100 52%,#e2a900 100%);
+ box-shadow:0 6px 0 #8a6500,0 11px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.9)}
+.b3d.y:active:not(:disabled){box-shadow:0 1px 0 #8a6500,0 3px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.7)}
+.b3d:disabled{filter:grayscale(.7) brightness(.7);cursor:default}
+.b3d:disabled::after{display:none}
+.b3d.g{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45);
+ background:linear-gradient(180deg,#8cf0a4 0%,#1fc15a 52%,#12893c 100%);
+ box-shadow:0 6px 0 #0a5a26,0 11px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.8)}
+.b3d.g:active:not(:disabled){box-shadow:0 1px 0 #0a5a26,0 3px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.6)}
+.b3d.g.sel{outline:3px solid #fff;outline-offset:1px}
+.day u{text-decoration:none;font-size:9px;font-weight:800;line-height:1.1;margin-top:1px}
+.back{position:absolute;right:0;top:3px;width:44px;height:40px;font-size:18px;border-radius:13px}
+
+/* ===== Ana sayfa ===== */
+.split{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.col{display:flex;flex-direction:column;gap:12px;min-height:0;padding-bottom:7px}
+.col .b3d{flex:1;min-height:0;font-size:clamp(16px,4.6vw,24px);letter-spacing:.3px}
+.big{flex-direction:column;display:flex;align-items:center;justify-content:center;gap:14px;text-align:center;padding:10px;line-height:1.25}
+.big svg{width:clamp(48px,18vw,92px);height:auto;filter:drop-shadow(0 3px 0 rgba(255,255,255,.55))}
+.big span{font-size:clamp(17px,5vw,26px);font-weight:900}
+
+/* ===== Operatör ===== */
+.topbar{display:flex;align-items:center;gap:10px;height:46px;flex:0 0 46px;margin-bottom:8px}
+.topbar h2{margin:0;font-size:clamp(20px,6vw,26px);font-weight:900;flex:1;color:var(--yellow);text-shadow:0 2px 0 #021a4a}
+.weekbar{display:flex;align-items:center;gap:10px;flex:0 0 46px;margin-bottom:10px}
+.weekbar .b3d{width:46px;height:40px;font-size:20px;border-radius:13px}
+.weekbar .lbl{flex:1;text-align:center;font-weight:800;font-size:14px;line-height:1.2}
+.weekbar .lbl small{display:block;font-weight:600;opacity:.75;font-size:12px}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;flex:0 0 auto;padding-bottom:7px}
+.day{height:clamp(72px,12dvh,90px);display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px}
+.day i{font-style:normal;font-size:12px;font-weight:800;opacity:.9}
+.day b{font-size:clamp(18px,5.4vw,24px);line-height:1.1}
+.day em{font-style:normal;font-size:11px;font-weight:800;min-height:14px}
+.mid{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;margin:6px 0}
+.hours{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr;gap:12px;flex:1;min-height:0;max-height:260px;padding-bottom:7px}
+.hours .b3d{font-size:clamp(24px,8vw,38px);border-radius:18px}
+.ask{text-align:center;font-weight:800;font-size:clamp(14px,4vw,17px);color:var(--yellow);text-shadow:0 2px 0 #021a4a;margin-bottom:12px;flex:0 0 auto}
+.state{text-align:center;font-size:clamp(18px,5.4vw,24px);font-weight:900;color:var(--yellow);text-shadow:0 2px 0 #021a4a}
+.entries{flex:0 0 40px;display:flex;gap:8px;overflow-x:auto;align-items:center;margin-bottom:8px;scrollbar-width:none}
+.entries::-webkit-scrollbar{display:none}
+.entry{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:5px 6px 5px 12px;border-radius:30px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);font-weight:800;font-size:14px}
+.entry.edit{background:var(--yellow);color:var(--ink);border-color:#fff}
+.elabel{background:none;border:0;font-weight:800;font-size:14px;padding:4px 2px;color:inherit}
+.entry button.x{width:28px;height:28px;border-radius:50%;border:0;background:#c8102e;color:#fff;font-size:13px;box-shadow:0 2px 0 #6e0a1b}
+.save{flex:0 0 clamp(54px,9dvh,64px);font-size:clamp(17px,5vw,22px);margin-bottom:7px}
+
+/* ===== Saatler ===== */
+.sat{flex:0 0 auto;border-radius:18px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;
+ background:linear-gradient(180deg,#fff08a,#ffd100 55%,#e2a900);color:var(--ink);
+ box-shadow:0 6px 0 #8a6500,0 11px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.9)}
+.sat small{font-weight:800;font-size:13px;opacity:.8;display:block}
+.sat b{font-size:clamp(22px,7vw,30px);font-weight:900;line-height:1.15;display:block}
+.sat svg{width:38px;height:38px;flex:0 0 38px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:0 0 auto;padding-bottom:7px;margin-bottom:10px}
+.tabs .b3d{height:46px;font-size:15px}
+.rows{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-evenly}
+.row{display:grid;grid-template-columns:clamp(62px,19vw,86px) 1fr 52px;align-items:center;gap:10px}
+.row{cursor:pointer;border-radius:14px;padding:4px 6px;margin:0 -6px}
+.row:active{background:rgba(255,255,255,.12)}
+.row .nm{font-weight:900;font-size:clamp(14px,4vw,18px)}
+.track{height:clamp(18px,3.6dvh,26px);border-radius:20px;background:rgba(0,0,0,.4);box-shadow:inset 0 3px 5px rgba(0,0,0,.55),0 1px 0 rgba(255,255,255,.2);overflow:hidden}
+.fill{position:relative;height:100%;border-radius:20px;min-width:0;transition:width .5s;
+ background:linear-gradient(180deg,#8dbaff,#3a78ea 55%,#1b57c9);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+.fill::after{content:"";position:absolute;left:4px;right:4px;top:2px;height:40%;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.65),rgba(255,255,255,.05))}
+.fill.y{background:linear-gradient(180deg,#fff08a,#ffd100 55%,#e2a900)}
+.row .hr{text-align:right;font-weight:900;font-size:clamp(14px,4vw,18px);white-space:nowrap}
+.row.low .hr{color:var(--yellow)}
+
+.modal{position:fixed;inset:0;background:rgba(1,10,34,.78);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:20;padding:14px}
+.sheet{width:min(100%,380px);padding:14px 14px 8px;border-radius:24px;background:linear-gradient(180deg,#0f4cbc,#052a78);border:2px solid rgba(255,255,255,.18);box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.dhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.dhead h3{margin:0;font-size:24px;font-weight:900;color:var(--yellow);text-shadow:0 2px 0 #021a4a}
+.dx{width:44px;height:38px;font-size:16px;border-radius:12px;margin-bottom:6px}
+.dweek{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.dweek .b3d{width:44px;height:38px;font-size:18px;border-radius:12px;flex:0 0 44px;margin-bottom:6px}
+.dweek #dLbl{flex:1;text-align:center;line-height:1.2}
+.dweek #dLbl b{display:block;font-size:16px}
+.dweek #dLbl small{font-size:12px;opacity:.8}
+.drow{display:flex;justify-content:space-between;align-items:center;padding:0 12px;height:clamp(38px,6.4dvh,48px);border-radius:12px;font-weight:800;font-size:16px}
+.drow:nth-child(odd){background:rgba(255,255,255,.08)}
+.drow small{font-size:12px;opacity:.7;font-weight:600;margin-left:6px}
+.drow b{color:var(--yellow);font-size:18px}
+.drow.zero b{color:rgba(255,255,255,.45)}
+.dfoot{display:flex;justify-content:space-between;padding:12px 12px 8px;font-weight:700;font-size:14px;border-top:1px solid rgba(255,255,255,.2);margin-top:8px}
+.dfoot b{color:var(--yellow);font-size:17px;margin-left:4px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,15px);opacity:0;pointer-events:none;background:#06307f;border:2px solid var(--yellow);color:#fff;padding:10px 16px;border-radius:14px;font-weight:800;font-size:14px;transition:.2s;max-width:calc(100% - 30px);text-align:center;z-index:30}
+.toast.err{border-color:#ff5b6e}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){.b3d::after{animation:none;display:none}.fill,.toast{transition:none}}
+@media(max-height:560px){.day{height:58px}.hours{max-height:170px;gap:8px}header,.topbar{height:40px;flex-basis:40px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+ <h1>FORKLIFT ÇALIŞMA SAATİ</h1>
+ <button class="b3d back" id="closeBtn" hidden aria-label="Kapat"><span>✕</span></button>
+</header>
+
+<!-- ANA SAYFA -->
+<section class="view" id="vHome">
+ <div class="split">
+  <div class="col" id="names"></div>
+  <div class="col">
+   <button class="b3d y big" id="goStats">
+    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect x="8" y="34" width="12" height="22" rx="3" fill="#0a2a6b"/><rect x="26" y="20" width="12" height="36" rx="3" fill="#0a2a6b"/><rect x="44" y="8" width="12" height="48" rx="3" fill="#0a2a6b"/></svg>
+    <span>Çalışma saatlerini gör</span>
+   </button>
+  </div>
+ </div>
+</section>
+
+<!-- OPERATÖR -->
+<section class="view" id="vOp" hidden>
+ <div class="topbar"><h2 id="opName"></h2></div>
+ <div class="weekbar">
+  <button class="b3d" id="prevWeek" aria-label="Önceki hafta"><span>‹</span></button>
+  <div class="lbl"><span id="weekTitle"></span><small id="weekRange"></small></div>
+  <button class="b3d" id="nextWeek" aria-label="Sonraki hafta"><span>›</span></button>
+ </div>
+ <div class="days" id="days"></div>
+ <div class="mid" id="mid"></div>
+ <div class="entries" id="entries"></div>
+ <button class="b3d y save" id="saveBtn" disabled><span>Kaydet</span></button>
+</section>
+
+<!-- SAATLER -->
+<section class="view" id="vStats" hidden>
+ <div class="sat">
+  <div><small>Cumartesi</small><b id="satWho"></b></div>
+  <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="26" stroke="#0a2a6b" stroke-width="6"/><circle cx="32" cy="32" r="9" fill="#0a2a6b"/></svg>
+ </div>
+ <div class="tabs">
+  <button class="b3d" id="tabWeek"><span>Hafta</span></button>
+  <button class="b3d" id="tabTotal"><span>Toplam</span></button>
+ </div>
+ <div class="rows" id="rows"></div>
+</section>
+</div>
+
+<div class="modal" id="detModal" hidden>
+ <div class="sheet">
+  <div class="dhead"><h3 id="detName"></h3><button class="b3d dx" id="detClose" aria-label="Kapat"><span>✕</span></button></div>
+  <div class="dweek">
+   <button class="b3d" id="dPrev" aria-label="Önceki hafta"><span>‹</span></button>
+   <div id="dLbl"></div>
+   <button class="b3d" id="dNext" aria-label="Sonraki hafta"><span>›</span></button>
+  </div>
+  <div id="dRows"></div>
+  <div class="dfoot" id="dFoot"></div>
+ </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ============ Ayarlar ============ */
+const NAMES=['Erhan','Erol','Gökhan','Sıtkı','Yasin'];
+const DAY_OWNER=['Erhan','Erol','Gökhan','Sıtkı','Yasin'];
+const DAY_SHORT=['Pzt','Sal','Çar','Per','Cum'];
+
+/* ============ Veri katmanı (Firestore, anlık senkron) ============
+   Firebase konsolundan aldığın config'i aşağıya yapıştır. */
+const FIREBASE_CONFIG={
+  apiKey:"BURAYA",
+  authDomain:"BURAYA",
+  projectId:"BURAYA",
+  storageBucket:"BURAYA",
+  messagingSenderId:"BURAYA",
+  appId:"BURAYA"
+};
+const USE_FB=FIREBASE_CONFIG.apiKey!=="BURAYA"&&typeof firebase!=="undefined";
+const KEY='forklift-saatler-v2';
+let onData=()=>{};
+const store=USE_FB?(()=>{
+ firebase.initializeApp(FIREBASE_CONFIG);
+ const col=firebase.firestore().collection('saatler');
+ let cache=[],ready;
+ const first=new Promise(r=>ready=r);
+ col.onSnapshot(snap=>{
+  cache=snap.docs.map(d=>({id:d.id,...d.data()}));
+  ready();onData(cache);
+ },err=>{console.error(err);ready();toast('Bağlantı hatası',true)});
+ return{
+  async load(){await first;return cache},
+  async add(rec){await col.doc(rec.id).set(rec)},
+  async update(id,hours){await col.doc(id).update({hours})},
+  async remove(id){await col.doc(id).delete()}
+ };
+})():{
+ async load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}},
+ async add(rec){const all=await this.load();all.push(rec);localStorage.setItem(KEY,JSON.stringify(all))},
+ async update(id,hours){const all=await this.load();const r=all.find(x=>x.id===id);if(r)r.hours=hours;localStorage.setItem(KEY,JSON.stringify(all))},
+ async remove(id){const all=(await this.load()).filter(r=>r.id!==id);localStorage.setItem(KEY,JSON.stringify(all))}
+};
+
+/* ============ Yardımcılar ============ */
+const $=id=>document.getElementById(id);
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const parse=s=>new Date(s+'T12:00:00');
+const mondayOf=d=>{const x=new Date(d);x.setHours(12,0,0,0);x.setDate(x.getDate()-((x.getDay()||7)-1));return x};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const fmtShort=s=>parse(s).toLocaleDateString('tr-TR',{day:'numeric',month:'short'});
+const sum=l=>l.reduce((s,r)=>s+Number(r.hours),0);
+const todayISO=()=>iso(new Date());
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y0)/864e5+1)/7)}
+const DAY_LONG=['Pazartesi','Salı','Çarşamba','Perşembe','Cuma'];
+function toast(msg,err){const t=$('toast');t.textContent=msg;t.classList.toggle('err',!!err);t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ============ Durum ============ */
+let records=[],user=null,weekOffset=0,selDate=null,picked=null,editingId=null,tab='week';
+async function refresh(){records=await store.load()}
+function show(v){
+ ['vHome','vOp','vStats'].forEach(x=>$(x).hidden=x!==v);
+ $('closeBtn').hidden=v==='vHome';
+}
+
+/* ============ Cumartesi hesabı ============ */
+function weekSums(){
+ const s=iso(mondayOf(new Date())),e=iso(addDays(mondayOf(new Date()),5));
+ const wk=records.filter(r=>r.date>=s&&r.date<e);
+ return NAMES.map(n=>({name:n,hours:sum(wk.filter(r=>r.person===n))}));
+}
+
+/* ============ Ana sayfa ============ */
+function renderHome(){
+ $('names').innerHTML=NAMES.map(n=>`<button class="b3d" data-name="${n}"><span>${n}</span></button>`).join('');
+}
+$('names').addEventListener('click',async e=>{
+ const b=e.target.closest('[data-name]');if(!b)return;
+ user=b.dataset.name;weekOffset=0;picked=null;editingId=null;
+ await refresh();selDate=defaultDay();renderOp();show('vOp');
+});
+$('goStats').addEventListener('click',async()=>{await refresh();tab='week';renderStats();show('vStats')});
+$('closeBtn').addEventListener('click',async()=>{user=null;await refresh();renderHome();show('vHome')});
+
+/* ============ Operatör ============ */
+function weekDates(){const m=addDays(mondayOf(new Date()),weekOffset*7);return[0,1,2,3,4].map(i=>iso(addDays(m,i)))}
+function eligible(date){return weekDates().includes(date)&&date<=todayISO()}
+function defaultDay(){const ds=weekDates();for(let i=4;i>=0;i--)if(eligible(ds[i]))return ds[i];return null}
+
+function renderOp(){
+ $('opName').textContent=user;
+ const ds=weekDates(),mine=records.filter(r=>r.person===user);
+ $('weekTitle').textContent=weekOffset===0?'Bu hafta':weekOffset===-1?'Geçen hafta':`${-weekOffset} hafta önce`;
+ $('weekRange').textContent=`${fmtShort(ds[0])} – ${fmtShort(ds[4])}`;
+ $('nextWeek').disabled=weekOffset>=0;
+ $('days').innerHTML=ds.map((d,i)=>{
+  const fut=d>todayISO(),tot=sum(mine.filter(r=>r.date===d));
+  const sel=d===selDate;
+  const isT=DAY_OWNER[i]===user;
+  return `<button class="b3d day ${isT?'g':sel?'y':''} ${isT&&sel?'sel':''}" data-day="${d}" ${fut?'disabled':''}><span style="display:flex;flex-direction:column;align-items:center"><i>${DAY_SHORT[i]}</i><b>${parse(d).getDate()}</b><em>${tot?tot+' sa':''}</em>${isT?'<u>Senin günün</u>':''}</span></button>`;
+ }).join('');
+ const ok=selDate&&eligible(selDate);
+ $('mid').innerHTML=ok
+  ?`<div class="ask">${editingId?'Saati değiştir':'Forklift kullandığınız saati seçiniz'}</div><div class="hours">${[1,2,3,4,5,6,7,8].map(h=>`<button class="b3d ${picked===h?'y':''}" data-h="${h}"><span>${h}</span></button>`).join('')}</div>`
+  :`<div class="state">Bir gün seç</div>`;
+ const recs=ok?mine.filter(r=>r.date===selDate):[];
+ $('entries').innerHTML=recs.map(r=>`<div class="entry ${editingId===r.id?'edit':''}"><button class="elabel" data-edit="${r.id}" aria-label="Düzenle">✎ ${r.hours} sa</button><button class="x" data-del="${r.id}" aria-label="Sil">✕</button></div>`).join('');
+ $('saveBtn').disabled=!(ok&&picked);
+ $('saveBtn').firstElementChild.textContent=picked?(editingId?`${picked} saat güncelle`:`${picked} saat ekle`):'Kaydet';
+}
+$('prevWeek').addEventListener('click',()=>{weekOffset--;selDate=defaultDay();picked=null;editingId=null;renderOp()});
+$('nextWeek').addEventListener('click',()=>{if(weekOffset<0){weekOffset++;selDate=defaultDay();picked=null;editingId=null;renderOp()}});
+$('days').addEventListener('click',e=>{const b=e.target.closest('[data-day]');if(!b||b.disabled)return;selDate=b.dataset.day;picked=null;editingId=null;renderOp()});
+$('mid').addEventListener('click',e=>{const b=e.target.closest('[data-h]');if(!b)return;picked=Number(b.dataset.h);renderOp()});
+$('saveBtn').addEventListener('click',async()=>{
+ if(!picked||!selDate)return;
+ try{
+  if(editingId){await store.update(editingId,picked);toast('Güncellendi')}
+  else{await store.add({id:Date.now()+Math.random().toString(36).slice(2,6),person:user,date:selDate,hours:picked});toast(`+${picked} saat`)}
+  await refresh();picked=null;editingId=null;renderOp();
+ }catch(err){toast('Kaydedilemedi',true)}
+});
+$('entries').addEventListener('click',async e=>{
+ const ed=e.target.closest('[data-edit]');
+ if(ed){
+  const id=ed.dataset.edit;
+  if(editingId===id){editingId=null;picked=null}
+  else{editingId=id;picked=Number((records.find(r=>r.id===id)||{}).hours)||null}
+  renderOp();return;
+ }
+ const b=e.target.closest('[data-del]');if(!b)return;
+ if(!confirm('Silinsin mi?'))return;
+ try{await store.remove(b.dataset.del);await refresh();toast('Silindi');editingId=null;picked=null;renderOp()}catch(err){toast('Silinemedi',true)}
+});
+
+/* ============ Saatler ============ */
+function renderStats(){
+ const wk=weekSums(),tot=NAMES.map(n=>({name:n,hours:sum(records.filter(r=>r.person===n))}));
+ const nobody=tot.every(x=>x.hours===0);
+ const tmin=Math.min(...tot.map(x=>x.hours));
+ let cand=tot.filter(x=>x.hours===tmin).map(x=>x.name);
+ if(cand.length>1){const wmin=Math.min(...cand.map(n=>wk.find(w=>w.name===n).hours));cand=cand.filter(n=>wk.find(w=>w.name===n).hours===wmin)}
+ const low=[cand[isoWeek(new Date())%cand.length]];
+ $('satWho').textContent=nobody?'—':low.join(', ');
+ $('tabWeek').firstElementChild.textContent=`${isoWeek(new Date())}. Hafta`;
+ $('tabWeek').classList.toggle('y',tab==='week');$('tabTotal').classList.toggle('y',tab==='total');
+ const rows=(tab==='week'?wk:NAMES.map(n=>({name:n,hours:sum(records.filter(r=>r.person===n))}))).slice().sort((a,b)=>b.hours-a.hours);
+ const max=Math.max(1,...rows.map(r=>r.hours));
+ $('rows').innerHTML=rows.map(r=>{
+  const isLow=!nobody&&low.includes(r.name);
+  const yel=tab==='total'||isLow;
+  return `<div class="row ${isLow?'low':''}" data-name="${r.name}"><div class="nm">${r.name}</div><div class="track"><div class="fill ${yel?'y':''}" style="width:${r.hours?Math.max(6,r.hours/max*100):0}%"></div></div><div class="hr">${r.hours} sa</div></div>`;
+ }).join('');
+}
+/* ---- Kişi detayı ---- */
+let detName=null,detOff=0;
+function renderDet(){
+ const m=addDays(mondayOf(new Date()),detOff*7);
+ const ds=[0,1,2,3,4].map(i=>iso(addDays(m,i))),mine=records.filter(r=>r.person===detName);
+ $('detName').textContent=detName;
+ $('dLbl').innerHTML=`<b>${isoWeek(m)}. Hafta</b><small>${fmtShort(ds[0])} – ${fmtShort(ds[4])}</small>`;
+ $('dNext').disabled=detOff>=0;
+ let wt=0;
+ $('dRows').innerHTML=ds.map((d,i)=>{const h=sum(mine.filter(r=>r.date===d));wt+=h;return `<div class="drow ${h?'':'zero'}"><span>${DAY_LONG[i]}<small>${fmtShort(d)}</small></span><b>${h?h+' sa':'—'}</b></div>`}).join('');
+ $('dFoot').innerHTML=`<span>Hafta<b>${wt} sa</b></span><span>Toplam<b>${sum(mine)} sa</b></span>`;
+}
+$('rows').addEventListener('click',e=>{const r=e.target.closest('[data-name]');if(!r)return;detName=r.dataset.name;detOff=0;renderDet();$('detModal').hidden=false});
+$('dPrev').addEventListener('click',()=>{detOff--;renderDet()});
+$('dNext').addEventListener('click',()=>{if(detOff<0){detOff++;renderDet()}});
+$('detClose').addEventListener('click',()=>$('detModal').hidden=true);
+$('detModal').addEventListener('click',e=>{if(e.target===$('detModal'))$('detModal').hidden=true});
+$('tabWeek').addEventListener('click',()=>{tab='week';renderStats()});
+$('tabTotal').addEventListener('click',()=>{tab='total';renderStats()});
+
+/* ============ Başlangıç ============ */
+onData=d=>{
+ records=d;
+ if(!$('vOp').hidden&&user)renderOp();
+ if(!$('vStats').hidden)renderStats();
+ if(!$('detModal').hidden&&detName)renderDet();
+};
+(async()=>{await refresh();renderHome();show('vHome')})();
+</script>
+</body>
+</html>
