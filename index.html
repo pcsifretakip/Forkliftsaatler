@@ -45,12 +45,15 @@ header h1{margin:0;white-space:nowrap;font-size:clamp(13px,4.2vw,20px);font-weig
  box-shadow:0 6px 0 #0a5a26,0 11px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.8)}
 .b3d.g:active:not(:disabled){box-shadow:0 1px 0 #0a5a26,0 3px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.6)}
 .b3d.g.sel{outline:3px solid #fff;outline-offset:1px}
-.day u{text-decoration:none;font-size:9px;font-weight:800;line-height:1.1;margin-top:1px}
+.day u{text-decoration:none;white-space:nowrap;font-size:8px;font-weight:800;line-height:1.1;margin-top:1px}
 .back{position:absolute;right:0;top:3px;width:44px;height:40px;font-size:18px;border-radius:13px}
 
 /* ===== Ana sayfa ===== */
 .split{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .col{display:flex;flex-direction:column;gap:12px;min-height:0;padding-bottom:7px}
+.col .b3d>span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.col .b3d svg{width:clamp(34px,11vw,52px);height:auto;fill:currentColor;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.col .b3d.g{background:linear-gradient(180deg,#8cf0a4 0%,#1fc15a 52%,#12893c 100%);box-shadow:0 6px 0 #0a5a26,0 11px 14px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.8)}
 .col .b3d{flex:1;min-height:0;font-size:clamp(16px,4.6vw,24px);letter-spacing:.3px}
 .big{flex-direction:column;display:flex;align-items:center;justify-content:center;gap:14px;text-align:center;padding:10px;line-height:1.25}
 .big svg{width:clamp(48px,18vw,92px);height:auto;filter:drop-shadow(0 3px 0 rgba(255,255,255,.55))}
@@ -63,7 +66,7 @@ header h1{margin:0;white-space:nowrap;font-size:clamp(13px,4.2vw,20px);font-weig
 .weekbar .b3d{width:46px;height:40px;font-size:20px;border-radius:13px}
 .weekbar .lbl{flex:1;text-align:center;font-weight:800;font-size:14px;line-height:1.2}
 .weekbar .lbl small{display:block;font-weight:600;opacity:.75;font-size:12px}
-.days{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;flex:0 0 auto;padding-bottom:7px}
+.days{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;flex:0 0 auto;padding-bottom:7px}
 .day{height:clamp(72px,12dvh,90px);display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px}
 .day i{font-style:normal;font-size:12px;font-weight:800;opacity:.9}
 .day b{font-size:clamp(18px,5.4vw,24px);line-height:1.1}
@@ -195,7 +198,7 @@ header h1{margin:0;white-space:nowrap;font-size:clamp(13px,4.2vw,20px);font-weig
 /* ============ Ayarlar ============ */
 const NAMES=['Erhan','Erol','Gökhan','Sıtkı','Yasin'];
 const DAY_OWNER=['Erhan','Erol','Gökhan','Sıtkı','Yasin'];
-const DAY_SHORT=['Pzt','Sal','Çar','Per','Cum'];
+const DAY_SHORT=['Pzt','Sal','Çar','Per','Cum','Cmt'];
 
 /* ============ Veri katmanı (Firestore, anlık senkron) ============
    Firebase konsolundan aldığın config'i aşağıya yapıştır. */
@@ -242,7 +245,7 @@ const fmtShort=s=>parse(s).toLocaleDateString('tr-TR',{day:'numeric',month:'shor
 const sum=l=>l.reduce((s,r)=>s+Number(r.hours),0);
 const todayISO=()=>iso(new Date());
 function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y0)/864e5+1)/7)}
-const DAY_LONG=['Pazartesi','Salı','Çarşamba','Perşembe','Cuma'];
+const DAY_LONG=['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
 function toast(msg,err){const t=$('toast');t.textContent=msg;t.classList.toggle('err',!!err);t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2200)}
 
 /* ============ Durum ============ */
@@ -255,14 +258,29 @@ function show(v){
 
 /* ============ Cumartesi hesabı ============ */
 function weekSums(){
- const s=iso(mondayOf(new Date())),e=iso(addDays(mondayOf(new Date()),5));
+ const s=iso(mondayOf(new Date())),e=iso(addDays(mondayOf(new Date()),6));
  const wk=records.filter(r=>r.date>=s&&r.date<e);
  return NAMES.map(n=>({name:n,hours:sum(wk.filter(r=>r.person===n))}));
 }
 
+function satISO(){return iso(addDays(mondayOf(new Date()),5))}
+function satPerson(){
+ const sd=satISO(),base=records.filter(r=>r.date<sd);
+ const m0=iso(mondayOf(new Date())),wkR=records.filter(r=>r.date>=m0&&r.date<sd);
+ const tot=NAMES.map(n=>({name:n,hours:sum(base.filter(r=>r.person===n)),wk:sum(wkR.filter(r=>r.person===n))}));
+ if(records.length===0||tot.every(x=>x.hours===0))return null;
+ const tmin=Math.min(...tot.map(x=>x.hours));
+ let c=tot.filter(x=>x.hours===tmin);
+ const wmin=Math.min(...c.map(x=>x.wk));c=c.filter(x=>x.wk===wmin);
+ return c[isoWeek(new Date())%c.length].name;
+}
+function todayOwner(){const d=new Date().getDay();return d===0?null:d===6?satPerson():NAMES[d-1]}
+const FORK='<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M26 14h12l6 14v10H26z"/><rect x="20" y="10" width="3" height="42" rx="1.5"/><rect x="6" y="48" width="22" height="3.5" rx="1.7"/><path d="M26 38h24a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H26z"/><circle cx="32" cy="50" r="6"/><circle cx="48" cy="50" r="6"/><circle cx="32" cy="50" r="2.2" fill="#0a2a6b"/><circle cx="48" cy="50" r="2.2" fill="#0a2a6b"/></svg>';
+
 /* ============ Ana sayfa ============ */
 function renderHome(){
- $('names').innerHTML=NAMES.map(n=>`<button class="b3d" data-name="${n}"><span>${n}</span></button>`).join('');
+ const own=todayOwner();
+ $('names').innerHTML=NAMES.map(n=>`<button class="b3d ${n===own?'g':''}" data-name="${n}"><span>${FORK}${n}</span></button>`).join('');
 }
 $('names').addEventListener('click',async e=>{
  const b=e.target.closest('[data-name]');if(!b)return;
@@ -273,20 +291,20 @@ $('goStats').addEventListener('click',async()=>{await refresh();tab='week';rende
 $('closeBtn').addEventListener('click',async()=>{user=null;await refresh();renderHome();show('vHome')});
 
 /* ============ Operatör ============ */
-function weekDates(){const m=addDays(mondayOf(new Date()),weekOffset*7);return[0,1,2,3,4].map(i=>iso(addDays(m,i)))}
+function weekDates(){const m=addDays(mondayOf(new Date()),weekOffset*7);return[0,1,2,3,4,5].map(i=>iso(addDays(m,i)))}
 function eligible(date){return weekDates().includes(date)&&date<=todayISO()}
-function defaultDay(){const ds=weekDates();for(let i=4;i>=0;i--)if(eligible(ds[i]))return ds[i];return null}
+function defaultDay(){const ds=weekDates();for(let i=5;i>=0;i--)if(eligible(ds[i]))return ds[i];return null}
 
 function renderOp(){
  $('opName').textContent=user;
  const ds=weekDates(),mine=records.filter(r=>r.person===user);
  $('weekTitle').textContent=weekOffset===0?'Bu hafta':weekOffset===-1?'Geçen hafta':`${-weekOffset} hafta önce`;
- $('weekRange').textContent=`${fmtShort(ds[0])} – ${fmtShort(ds[4])}`;
+ $('weekRange').textContent=`${fmtShort(ds[0])} – ${fmtShort(ds[5])}`;
  $('nextWeek').disabled=weekOffset>=0;
  $('days').innerHTML=ds.map((d,i)=>{
   const fut=d>todayISO(),tot=sum(mine.filter(r=>r.date===d));
   const sel=d===selDate;
-  const isT=DAY_OWNER[i]===user;
+  const isT=i<5?DAY_OWNER[i]===user:(weekOffset===0&&satPerson()===user);
   return `<button class="b3d day ${isT?'g':sel?'y':''} ${isT&&sel?'sel':''}" data-day="${d}" ${fut?'disabled':''}><span style="display:flex;flex-direction:column;align-items:center"><i>${DAY_SHORT[i]}</i><b>${parse(d).getDate()}</b><em>${tot?tot+' sa':''}</em>${isT?'<u>Senin günün</u>':''}</span></button>`;
  }).join('');
  const ok=selDate&&eligible(selDate);
@@ -325,13 +343,9 @@ $('entries').addEventListener('click',async e=>{
 
 /* ============ Saatler ============ */
 function renderStats(){
- const wk=weekSums(),tot=NAMES.map(n=>({name:n,hours:sum(records.filter(r=>r.person===n))}));
- const nobody=tot.every(x=>x.hours===0);
- const tmin=Math.min(...tot.map(x=>x.hours));
- let cand=tot.filter(x=>x.hours===tmin).map(x=>x.name);
- if(cand.length>1){const wmin=Math.min(...cand.map(n=>wk.find(w=>w.name===n).hours));cand=cand.filter(n=>wk.find(w=>w.name===n).hours===wmin)}
- const low=[cand[isoWeek(new Date())%cand.length]];
- $('satWho').textContent=nobody?'—':low.join(', ');
+ const wk=weekSums();
+ const sp=satPerson(),nobody=!sp,low=[sp];
+ $('satWho').textContent=nobody?'—':sp;
  $('tabWeek').firstElementChild.textContent=`${isoWeek(new Date())}. Hafta`;
  $('tabWeek').classList.toggle('y',tab==='week');$('tabTotal').classList.toggle('y',tab==='total');
  const rows=(tab==='week'?wk:NAMES.map(n=>({name:n,hours:sum(records.filter(r=>r.person===n))}))).slice().sort((a,b)=>b.hours-a.hours);
@@ -346,9 +360,9 @@ function renderStats(){
 let detName=null,detOff=0;
 function renderDet(){
  const m=addDays(mondayOf(new Date()),detOff*7);
- const ds=[0,1,2,3,4].map(i=>iso(addDays(m,i))),mine=records.filter(r=>r.person===detName);
+ const ds=[0,1,2,3,4,5].map(i=>iso(addDays(m,i))),mine=records.filter(r=>r.person===detName);
  $('detName').textContent=detName;
- $('dLbl').innerHTML=`<b>${isoWeek(m)}. Hafta</b><small>${fmtShort(ds[0])} – ${fmtShort(ds[4])}</small>`;
+ $('dLbl').innerHTML=`<b>${isoWeek(m)}. Hafta</b><small>${fmtShort(ds[0])} – ${fmtShort(ds[5])}</small>`;
  $('dNext').disabled=detOff>=0;
  let wt=0;
  $('dRows').innerHTML=ds.map((d,i)=>{const h=sum(mine.filter(r=>r.date===d));wt+=h;return `<div class="drow ${h?'':'zero'}"><span>${DAY_LONG[i]}<small>${fmtShort(d)}</small></span><b>${h?h+' sa':'—'}</b></div>`}).join('');
@@ -365,6 +379,7 @@ $('tabTotal').addEventListener('click',()=>{tab='total';renderStats()});
 /* ============ Başlangıç ============ */
 onData=d=>{
  records=d;
+ if(!$('vHome').hidden)renderHome();
  if(!$('vOp').hidden&&user)renderOp();
  if(!$('vStats').hidden)renderStats();
  if(!$('detModal').hidden&&detName)renderDet();
